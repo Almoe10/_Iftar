@@ -15,7 +15,7 @@
     <div class="bg-image"></div>
     <div class="bg-text">
         <h1 class="text-color">Ramadan 2023</h1>
-        <h2 class="h4">Iftar time today for <span id="date"></span>
+        <h2 class="h4">Iftar time today (<span id="date"></span>)
         </h2>
         <p class="time" id="locationData"></p>
         <p><i>*Based on current location</i></p>
@@ -26,45 +26,55 @@
 
         $(document).ready(function () {
 
-            const url = 'https://api.wheretheiss.at/v1/coordinates/';
-
-            var today = new Date();
             const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-            $("#date").html(months[today.getMonth()] + ' ' + today.getDate() + ', ' + today.getFullYear());
 
             function locationSuccess(position) {
                 var latitude = position.coords.latitude;
                 var longitude = position.coords.longitude;
-                var offset = null;
-                getOffset(latitude, longitude);
-                getIftarTime(latitude, longitude, offset);
-                console.log(latitude + " " + longitude);
+                getOffset(latitude, longitude)
             }
 
             //Gets the iftar time based on the sunset plus 15 mins (Shia Time)
-            function getIftarTime(latitude, longitude) {
-                var times = suntimes(latitude, longitude, -4);
+            function getIftarTime(latitude, longitude, offset) {
+                var times = suntimes(latitude, longitude, offset);
                 console.log(times);
+                //add 15 mins to time
+                times[1] += 0.25;
                 var hours = Math.floor(times[1]);
-                var mins = Math.round((times[1] - Math.floor(times[1])) * 60) + 15;
-                var iftar = hours + ':' + mins;
+                var mins = Math.round((times[1] - Math.floor(times[1])) * 60);
+                var iftar = (mins < 10) ? hours + ':0' + mins : hours + ':' + mins;
+
                 $("#locationData").html(iftar);
             }
 
+            //Gets the current date based on timezone of user
+            function getDate(timezone) {
+                var date = new Date().toLocaleString("en-US", { timeZone: timezone });
+                var day = date.split(',')
+                $("#date").html(day[0]);
+            }
+
+            //Calls API to find offset based on latitude and longitude
             function getOffset(latitude, longitude) {
-                console.log(url + latitude + ',' + longitude);
-                if (latitude != "" && latitude != null && longitude != "" && longitude != null) {
-                    $.ajax({
-                        url: url + latitude + ',' + longitude,
-                        contentType: "application/json",
-                        dataType: 'json',
-                        success: function (result) {
-                            console.log(result);
-                        }
-                    })
-                } else {
-                    console.log("Enter latitude and lonitude...")
+                // Creating Our XMLHttpRequest object 
+                var xhr = new XMLHttpRequest();
+
+                // Making our connection  
+                var url = 'https://api.wheretheiss.at/v1/coordinates/+' + latitude + ',' + longitude;
+                xhr.open("GET", url, true);
+
+                // function execute after request is successful 
+                xhr.onreadystatechange = function () {
+                    if (this.readyState == 4 && this.status == 200) {
+                        var data = this.responseText
+                        var jsonResponse = JSON.parse(data);
+                        getIftarTime(latitude, longitude, jsonResponse.offset);
+                        getDate(jsonResponse.timezone_id);
+                    }
                 }
+                // Sending our request 
+                xhr.send();
+
             }
 
             if (navigator.geolocation) {
