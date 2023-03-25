@@ -26,24 +26,45 @@
 
         $(document).ready(function () {
 
-            var offset = (new Date().getTimezoneOffset() / 60) * -1; //offset returned in minutes - divide by 60 to get hours and multiply by the inverse
+            const url = 'https://api.wheretheiss.at/v1/coordinates/';
+
             var today = new Date();
             const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
             $("#date").html(months[today.getMonth()] + ' ' + today.getDate() + ', ' + today.getFullYear());
+
             function locationSuccess(position) {
                 var latitude = position.coords.latitude;
                 var longitude = position.coords.longitude;
-                position.Date
-                getIftarTime(latitude, longitude);
+                var offset = null;
+                getOffset(latitude, longitude);
+                getIftarTime(latitude, longitude, offset);
+                console.log(latitude + " " + longitude);
             }
 
             //Gets the iftar time based on the sunset plus 15 mins (Shia Time)
             function getIftarTime(latitude, longitude) {
-                var times = suntimes(latitude, longitude, offset);
+                var times = suntimes(latitude, longitude, -4);
+                console.log(times);
                 var hours = Math.floor(times[1]);
                 var mins = Math.round((times[1] - Math.floor(times[1])) * 60) + 15;
                 var iftar = hours + ':' + mins;
                 $("#locationData").html(iftar);
+            }
+
+            function getOffset(latitude, longitude) {
+                console.log(url + latitude + ',' + longitude);
+                if (latitude != "" && latitude != null && longitude != "" && longitude != null) {
+                    $.ajax({
+                        url: url + latitude + ',' + longitude,
+                        contentType: "application/json",
+                        dataType: 'json',
+                        success: function (result) {
+                            console.log(result);
+                        }
+                    })
+                } else {
+                    console.log("Enter latitude and lonitude...")
+                }
             }
 
             if (navigator.geolocation) {
@@ -51,6 +72,8 @@
             } else {
                 $("#locationData").html('Your browser does not support location data retrieval.');
             }
+
+
 
         });
 
