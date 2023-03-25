@@ -15,7 +15,8 @@
     <div class="bg-image"></div>
     <div class="bg-text">
         <h1 class="text-color">Ramadan 2023</h1>
-        <h2 class="h4">Iftar time today is</h2>
+        <h2 class="h4">Iftar time today for <span id="date">test</span>
+        </h2>
         <p class="time" id="locationData"></p>
         <p><i>*Based on current location</i></p>
         <p class="h4 text-color">Ramadan Kareem to you and your families!</p>
@@ -26,11 +27,13 @@
         $(document).ready(function () {
 
             var offset = (new Date().getTimezoneOffset() / 60) * -1; //offset returned in minutes - divide by 60 to get hours and multiply by the inverse
-
+            var today = new Date();
+            const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            $("#date").html(months[today.getMonth()] + ' ' + today.getDate() + ', ' + today.getFullYear());
             function locationSuccess(position) {
                 var latitude = position.coords.latitude;
                 var longitude = position.coords.longitude;
-                console.log(latitude + " " + longitude);
+                position.Date
                 getIftarTime(latitude, longitude);
             }
 
